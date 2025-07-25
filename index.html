@@ -1,0 +1,208 @@
+<!-- Retro BASIC/Commodore/Pixel fonts: Open Source font stack -->
+<link rel="stylesheet" href="https://int10h.org/oldschool-pc-fonts/font/pc437_vga_8x16.woff2.css">
+<link rel="stylesheet" href="https://int10h.org/oldschool-pc-fonts/font/commmodore_64_pixelized.woff2.css">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+
+<style>
+html,body{
+  margin:0;
+  padding:0;
+  width:100%;
+  height:100%;
+  overflow:hidden;
+  background:black;
+  color:#00ff00;
+  font-family: 'PC437 VGA 8x16', 'Commodore 64 Pixelized', 'Press Start 2P', monospace;
+  image-rendering: pixelated;
+  text-rendering: geometricPrecision;
+}
+canvas{display:block}
+#floating-category{
+  display:none;
+  position:absolute;
+  z-index:10;
+}
+</style>
+
+<canvas id="matrixrain"></canvas>
+<div id="floating-category"></div>
+
+<script>
+// ===== MATRIX RAIN: FULL POEMS, RETRO FONTS =====
+var poemSentences = [
+  // Invictus (by Henley)
+  "out of the night that covers me, black as the pit from pole to pole,",
+  "i thank whatever gods may be for my unconquerable soul.",
+  "in the fell clutch of circumstance i have not winced nor cried aloud.",
+  "beyond this place of wrath and tears looms but the horror of the shade,",
+  "and yet the menace of the years finds and shall find me unafraid.",
+  "it matters not how strait the gate, nor how charged with punishments the scroll,",
+  "i am the master of my fate: i am the captain of my soul.",
+  // Ozymandias (by Shelley)
+  "i met a traveller from an antique land who said: two vast and trunkless legs of stone stand in the desert.",
+  "near them, on the sand, half sunk, a shattered visage lies, whose frown, and wrinkled lip, and sneer of cold command, tell that its sculptor well those passions read.",
+  "which yet survive, stamped on these lifeless things, the hand that mocked them and the heart that fed.",
+  "and on the pedestal these words appear: my name is ozymandias, king of kings; look on my works, ye mighty, and despair!",
+  "nothing beside remains. round the decay of that colossal wreck, boundless and bare, the lone and level sands stretch far away.",
+  // Abdul Abulbul Amir (by Percy French)
+  "the sons of the prophet are brave men and bold and quite unaccustomed to fear, but the bravest by far in the ranks of the shah was abdul abulbul amir.",
+  "if you wanted a man to encourage the van or harass the foe from the rear, storm fort or redoubt, you had only to shout for abdul abulbul amir.",
+  "now the heroes were plenty and well known to fame in the troops that were led by the czar, and the bravest of these was a man by the name of ivan skavinsky skavar.",
+  "one day this bold russian, he shouldered his gun and donned his most truculent sneer, downtown he did go where he trod on the toe of abdul abulbul amir.",
+  "young man, quoth abdul, has life grown so dull that you wish to end your career?",
+  "vile infidel, know, you have trod on the toe of abdul abulbul amir.",
+  "so take your last look at the sunshine and brook and send your regrets to the czar for by this i imply, you are going to die, count ivan skavinsky skavar.",
+  "then this bold mameluke drew his trusty skibouk, singing, allah! il allah! al-lah! and with murderous intent he ferociously went for ivan skavinsky skavar.",
+  "as abdul's long knife was extracting the life, in fact he was shouting, huzzah! he felt himself struck by that wily calmuck, count ivan skavinsky skavar.",
+  "the sultan drove by in his red-breasted fly, expecting the victor to cheer, but he only drew nigh to hear the last sigh, of abdul abulbul amir.",
+  "there's a tomb rises up where the blue danube rolls, and graved there in characters clear, is, stranger, when passing, oh pray for the soul of abdul abulbul amir.",
+  // An Irish Airman Foresees His Death (by Yeats)
+  "i know that i shall meet my fate somewhere among the clouds above;",
+  "those that i fight i do not hate, those that i guard i do not love;",
+  "my country is kiltartan cross, my countrymen kiltartan's poor;",
+  "no likely end could bring them loss or leave them happier than before.",
+  "nor law, nor duty bade me fight, nor public men, nor cheering crowds, a lonely impulse of delight drove to this tumult in the clouds;",
+  "i balanced all, brought all to mind, the years to come seemed waste of breath, a waste of breath the years behind in balance with this life, this death."
+];
+var stripCount = 35;
+var stripX = [], stripY = [], dX = [], stripFontSize = [], stripSentence = [], stripTravelTime = [];
+var theColors = ['#00ff00','#80ff80','#40ff40','#20ff20','#00dd00'];
+
+var canvas = document.getElementById('matrixrain');
+var context = canvas.getContext('2d');
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+context.globalCompositeOperation = 'lighter';
+
+// Helper for measuring sentence width in the correct font stack
+function setFont(i) {
+  context.font = stripFontSize[i] + "px 'PC437 VGA 8x16', 'Commodore 64 Pixelized', 'Press Start 2P', monospace";
+}
+
+// Initialize all strips
+for(var i=0;i<stripCount;i++){
+  stripY[i] = Math.random() * window.innerHeight;
+  stripSentence[i] = poemSentences[Math.floor(Math.random() * poemSentences.length)];
+  stripFontSize[i] = Math.random() * 12 + 20;
+  stripX[i] = Math.random() * window.innerWidth;
+  stripTravelTime[i] = Math.random() * 27.5 + 12.5; // 2x faster: 12.5-40s
+  setFont(i);
+  var sentenceWidth = context.measureText(stripSentence[i]).width;
+  dX[i] = (canvas.width + sentenceWidth + 60) / (stripTravelTime[i] * 60);
+}
+
+function drawStrip(x, y, fontSize, sentence){
+  context.fillStyle = theColors[Math.floor(Math.random()*theColors.length)];
+  context.font = fontSize + "px 'PC437 VGA 8x16', 'Commodore 64 Pixelized', 'Press Start 2P', monospace";
+  context.fillText(sentence, x, y);
+}
+
+function animate(){
+  context.fillStyle = 'rgba(0,0,0,0.5)';
+  context.fillRect(0,0,canvas.width,canvas.height);
+
+  for(var i=0;i<stripCount;i++){
+    context.textAlign = 'left';
+    context.textBaseline = 'top';
+    drawStrip(stripX[i], stripY[i], stripFontSize[i], stripSentence[i]);
+    stripX[i] -= dX[i];
+
+    setFont(i);
+    var sentenceWidth = context.measureText(stripSentence[i]).width;
+
+    if(stripX[i] < -sentenceWidth - 20) {
+      stripX[i] = canvas.width + 40;
+      stripY[i] = Math.random() * canvas.height;
+      stripFontSize[i] = Math.random() * 12 + 20;
+      stripSentence[i] = poemSentences[Math.floor(Math.random() * poemSentences.length)];
+      stripTravelTime[i] = Math.random() * 27.5 + 12.5;
+      setFont(i);
+      var newWidth = context.measureText(stripSentence[i]).width;
+      dX[i] = (canvas.width + newWidth + 60) / (stripTravelTime[i] * 60);
+    }
+  }
+  requestAnimationFrame(animate);
+}
+animate();
+
+window.addEventListener('resize', function(){
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  for(var i=0;i<stripCount;i++){
+    setFont(i);
+    var sentenceWidth = context.measureText(stripSentence[i]).width;
+    dX[i] = (canvas.width + sentenceWidth + 60) / (stripTravelTime[i] * 60);
+    if(stripX[i] < -sentenceWidth - 20 || stripX[i] > canvas.width + 40){
+      stripX[i] = Math.random() * canvas.width;
+    }
+  }
+});
+
+// ===== RANDOM FLOATING CATEGORY BUTTONS =====
+const categories = [
+  {
+    label: "Poetry",
+    url: "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fthumbs.dreamstime.com%2Fb%2Fpoet-theme-elements-vector-eps-illustration-file-51867494.jpg&f=1&nofb=1&ipt=f0fa369b9c21a011a812038d0ace23990f69c4c4a087f7fcbdeb1595ad149037",
+    img: "https://thumbs.dreamstime.com/b/poet-theme-elements-vector-eps-illustration-file-51867494.jpg"
+  },
+  {
+    label: "Picaroos",
+    url: "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fpng.pngtree.com%2Fpng-clipart%2F20230913%2Foriginal%2Fpngtree-poems-clipart-cute-girl-reading-a-book-in-the-forests-with-png-image_11058337.png&f=1&nofb=1&ipt=a47b3fb8e41622902b2e532b32f07287c7509298ebb9a6f5814d38b4087d7ebc",
+    img: "https://png.pngtree.com/png-clipart/20230913/original/pngtree-poems-clipart-cute-girl-reading-a-book-in-the-forests-with-png-image_11058337.png"
+  },
+  {
+    label: "TIDE",
+    url: "https://tidesandcurrents.noaa.gov/noaatidepredictions.html?id=9414806&legacy=1",
+    img: "https://cdn-icons-png.flaticon.com/512/2157/2157048.png"
+  }
+];
+
+const floating = document.getElementById('floating-category');
+
+function showFloatingCategory() {
+  const cat = categories[Math.floor(Math.random()*categories.length)];
+  const boxW = 280, boxH = 120;
+  const winW = window.innerWidth, winH = window.innerHeight;
+  const left = Math.max(20, Math.floor(Math.random()*(winW-boxW-20)));
+  const top  = Math.max(20, Math.floor(Math.random()*(winH-boxH-20)));
+  floating.innerHTML = `
+    <a href="${cat.url}" target="_blank" style="
+      display:flex;align-items:center;gap:14px;
+      background:#001c08ee;border:2px solid #00ff00;box-shadow:0 2px 16px #001c0844;
+      border-radius:15px;padding:20px;min-width:${boxW-30}px;min-height:${boxH-20}px;
+      text-decoration:none;transition:box-shadow 0.2s,opacity 0.5s;
+      font-family:'PC437 VGA 8x16','Commodore 64 Pixelized','Press Start 2P',monospace;
+      color:#00ff00;font-size:19px;text-shadow:0 1px 0 #002a10;
+      opacity:0.92;cursor:pointer;user-select:none;">
+      <img src="${cat.img}" alt="${cat.label}" style="width:80px;height:80px;border-radius:9px;box-shadow:0 0 8px #00ff0033;">
+      <span style="font-size:26px;font-weight:bold;letter-spacing:2px;text-transform:uppercase">${cat.label}</span>
+    </a>
+  `;
+  floating.style.display = "block";
+  floating.style.left = left + "px";
+  floating.style.top = top + "px";
+  floating.style.opacity = "0";
+  floating.style.pointerEvents = "auto";
+  setTimeout(() => { floating.style.opacity = "1"; floating.style.transition = "opacity 0.5s"; }, 10);
+  setTimeout(() => {
+    floating.style.opacity = "0";
+    floating.style.pointerEvents = "none";
+    setTimeout(() => floating.style.display="none", 500);
+  }, 10000);
+}
+
+function floatingCategoryLoop(){
+  showFloatingCategory();
+  setTimeout(floatingCategoryLoop, 10000 + Math.random()*15000);
+}
+floatingCategoryLoop();
+
+window.addEventListener("resize", ()=>{
+  if(floating.style.display==="block") {
+    const boxW = 280, boxH = 120;
+    const winW = window.innerWidth, winH = window.innerHeight;
+    floating.style.left = Math.max(20, Math.min(parseInt(floating.style.left),winW-boxW-20))+"px";
+    floating.style.top  = Math.max(20, Math.min(parseInt(floating.style.top), winH-boxH-20))+"px";
+  }
+});
+</script>
